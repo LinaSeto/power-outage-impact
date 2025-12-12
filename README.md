@@ -37,6 +37,108 @@ With this data, I will analyze the effect of urbanization level on the number of
 
 
 ## Data Cleaning and Exploratory Data Analysis
+### Data Cleaning
+In order to ensure effective analysis, I first cleaned the data.
+
+0. Before starting to clean the data, I removed the initial first row from the dataframe as it consisted of units and did not represent a power outage instance.
+
+1. First, I keep only the columns with features relevant to my analysis: `'YEAR'`, `'MONTH'`, `'U.S._STATE'`, `'NERC.REGION'`, `'CLIMATE.REGION'`, `'ANOMALY.LEVEL'`, `'CLIMATE.CATEGORY'`, `'OUTAGE.START.DATE'`, `'OUTAGE.START.TIME'`, `'OUTAGE.RESTORATION.DATE'`, `'OUTAGE.RESTORATION.TIME'`, `'CAUSE.CATEGORY'`, `'OUTAGE.DURATION'`, `'DEMAND.LOSS.MW'`, `'CUSTOMERS.AFFECTED'`, `'TOTAL.PRICE'`, `'TOTAL.SALES'`, `'TOTAL.CUSTOMERS'`, `'POPPCT_URBAN'`, `'AREAPCT_URBAN'`. I drop the rest of the features.
+
+2. Next, I combine `'OUTAGE.START.DATE'` and `'OUTAGE.START.TIME'` into one column `'OUTAGE.START.DATETIME'` that represents the timestamp of the start of the power outage. I do the same with the restoration time, combining`'OUTAGE.RESTORATION.DATE'`and `'OUTAGE.RESTORATION.TIME'` into one column `'OUTAGE.RESTORATION.DATETIME'` that represents the timestamp at which power was restoreed. I then dropped the old columns `'OUTAGE.START.DATE'`, `'OUTAGE.START.TIME'`, `'OUTAGE.RESTORATION.DATE'`, and `'OUTAGE.RESTORATION.TIME'`.
+
+3. I convert `'YEAR'` from a float to an integer datatype and `'MONTH'` from a number to the name of the month. I also convert all numerical columns not stored as numerical datatypes, `'ANOMALY.LEVEL'`, `'OUTAGE.DURATION'`, `'DEMAND.LOSS.MW'`, `'CUSTOMERS.AFFECTED'`, `'TOTAL.PRICE'`, `'TOTAL.SALES'`, `'TOTAL.CUSTOMERS'`, `'POPPCT_URBAN'`, `'AREAPCT_URBAN'`, into float datatypes.
+
+4. I added the values of `'CLIMATE.REGION'` for Hawaii and Alaska as their state names. The values for these two states were previously marked as null because they are not given climate regions by the National Centers for Environmental Information.
+
+5. Finally, I engineered two variables to use for future analysis. The first is `'is_HIGH_URBAN'` which holds values of True for areas with high urbanization where over 80% of the state population lives in urban areas (`'POPPCT_URBAN'` > 80%) and False for areas of low urbanization where under or approximately 80% of the state population lives in urban areas (`'POPPCT_URBAN'` <= 80%). The second is `'is_MAJOR_OUTAGE'` which hold values of True for major outages which is defined as one lasting over 60 minutes and affecting over 50,000 customers (`'OUTAGE.DURATION'` > 60 and `'CUSTOMERS.AFFECTED'` > 50,000) and False otherwise (`'OUTAGE.DURATION'` <= 60 and `'CUSTOMERS.AFFECTED'` <= 50,000).
+
+Below is the first few rows of the cleaned dataframe. The cleaned dataframe has 1534 rows and 20 columns.
+|   YEAR | MONTH   | U.S._STATE   | NERC.REGION   | CLIMATE.REGION     |   ANOMALY.LEVEL | CLIMATE.CATEGORY   | CAUSE.CATEGORY     |   OUTAGE.DURATION |   DEMAND.LOSS.MW |   CUSTOMERS.AFFECTED |   TOTAL.PRICE |   TOTAL.SALES |   TOTAL.CUSTOMERS |   POPPCT_URBAN |   AREAPCT_URBAN | OUTAGE.START.DATETIME   | OUTAGE.RESTORATION.DATETIME   | is_HIGH_URBAN   | is_MAJOR_OUTAGE   |
+|-------:|:--------|:-------------|:--------------|:-------------------|----------------:|:-------------------|:-------------------|------------------:|-----------------:|---------------------:|--------------:|--------------:|------------------:|---------------:|----------------:|:------------------------|:------------------------------|:----------------|:------------------|
+|   2011 | July    | Minnesota    | MRO           | East North Central |            -0.3 | normal             | severe weather     |              3060 |              nan |                70000 |          9.28 |   6.56252e+06 |       2.5957e+06  |          73.27 |            2.14 | 2011-07-01 17:00:00     | 2011-07-03 20:00:00           | False           | True              |
+|   2014 | May     | Minnesota    | MRO           | East North Central |            -0.1 | normal             | intentional attack |                 1 |              nan |                  nan |          9.28 |   5.28423e+06 |       2.64074e+06 |          73.27 |            2.14 | 2014-05-11 18:38:00     | 2014-05-11 18:39:00           | False           | False             |
+|   2010 | October | Minnesota    | MRO           | East North Central |            -1.5 | cold               | severe weather     |              3000 |              nan |                70000 |          8.15 |   5.22212e+06 |       2.5869e+06  |          73.27 |            2.14 | 2010-10-26 20:00:00     | 2010-10-28 22:00:00           | False           | True              |
+|   2012 | June    | Minnesota    | MRO           | East North Central |            -0.1 | normal             | severe weather     |              2550 |              nan |                68200 |          9.19 |   5.78706e+06 |       2.60681e+06 |          73.27 |            2.14 | 2012-06-19 04:30:00     | 2012-06-20 23:00:00           | False           | True              |
+|   2015 | July    | Minnesota    | MRO           | East North Central |             1.2 | warm               | severe weather     |              1740 |              250 |               250000 |         10.43 |   5.97034e+06 |       2.67353e+06 |          73.27 |            2.14 | 2015-07-18 02:00:00     | 2015-07-19 07:00:00           | False           | True              |
+
+### Exploratory Data Analysis
+#### Univariate Analysis
+To understand the data, I performed a univariate analysis on several variables to understand the distribution relative to number of power outages.
+
+First, I examined the distribution of years.
+<iframe
+  src="assets/outage_per_year.html"
+  width="800"
+  height="600"
+  frameborder="0"
+></iframe>
+The number of power outages each year has increased slightly beginning in 2000 with a sharp increase and peak in 2011 before gradually decreasing until 2016.
+
+As I will focus on the number of customers affected by power outages in my analysis, I examine the distribution of customers affected next.
+<iframe
+  src="assets/cust_affect.html"
+  width="800"
+  height="600"
+  frameborder="0"
+></iframe>
+The histogram indicates that the number of customers affected is heavily skewed to the right with a peak at the 0 to 49,999 customers bin. This suggests that outages affecting a smaller number of customers are more frequent than those that affect over 500,000 customers.
+
+To understand the number of customers affected in different states, I created a choropleth map.
+<iframe
+  src="assets/map.html"
+  width="800"
+  height="600"
+  frameborder="0"
+></iframe>
+California has the highest number of customers affected with over 25 million total customers affected. Texas and Michigan are next with over 20 million and 13 million total customers affected respectively. Generally, there appears to be more states with over 4 million total customers affected in the northeast region of the US.
+
+#### Bivariate Analysis
+In order to identify relationships between features, I performed several bivariate analyses.
+
+First, I plotted the percentage of state population living in urban areas, which I will call urban population percentage, against the number of customers affected.
+<iframe
+  src="assets/cust_affect_vs_urban.html"
+  width="800"
+  height="600"
+  frameborder="0"
+></iframe>
+There seems to be a slight positive correlation with more customers affected in states with higher urban population percentage. However, most of the data remains clustered in under 1 million customers affected for the entire range of urban population percentage.
+
+I also looked at the number of customers affected per climate region, including Hawaii and Alaska. 
+<iframe
+  src="assets/cust_affect_vs_region.html"
+  width="800"
+  height="600"
+  frameborder="0"
+></iframe>
+I found that there are more customers affected in the Northeast, West, South, and Southwest regions of the US, which all saw over 20 million total customers affected. On the other hand, the Southwest and West North Central regions along with Hawaii and Alaska all had under 2 million total customers affected.
+
+#### Aggragate Analysis
+I first found the average outage duration and number of customers affected for each cause category.
+| CAUSE.CATEGORY                |   OUTAGE.DURATION |   CUSTOMERS.AFFECTED |
+|:------------------------------|------------------:|---------------------:|
+| equipment failure             |          1816.91  |        101936        |
+| fuel supply emergency         |         13484     |             0.142857 |
+| intentional attack            |           429.98  |          1790.53     |
+| islanding                     |           200.545 |          6169.09     |
+| public appeal                 |          1468.45  |          7618.76     |
+| severe weather                |          3883.99  |        188575        |
+| system operability disruption |           728.87  |        211066        |
+
+This chart provides interesting information about what outage cause categories tend to have high or low duration and number of customers affected. For example, fuel supply emergencies tend to have long outage durations with few customers affected. On the other hand, outages caused by equipment failure, severe weather, and system operability disruption all affect a large number of customers, but have relatively short outage durations compared to outages caused by fuel supply emergencies.
+
+I also found the number of power outages that are major and not major, as decided by the column `'is_MAJOR_OUTAGE'`, for each cause category.
+| CAUSE.CATEGORY                |   not_major |   is_major |
+|:------------------------------|------------:|-----------:|
+| equipment failure             |          18 |         12 |
+| fuel supply emergency         |           7 |          0 |
+| intentional attack            |         197 |          2 |
+| islanding                     |          34 |          0 |
+| public appeal                 |          21 |          0 |
+| severe weather                |         101 |        616 |
+| system operability disruption |          40 |         43 |
+
+This pivot table shows which cause categories tend to lead to major or non-major outages. Equipment failure and system operability disruption tend to lead equally to major and non-major outages. Fuel supply emergencies, intentional attacks, islanding, and public appeal lead to non-major outages. However, severe weather often leads to major outages.
 
 ## Hypothesis Testing
 
