@@ -53,6 +53,7 @@ In order to ensure effective analysis, I first cleaned the data.
 5. Finally, I engineered two variables to use for future analysis. The first is `'is_HIGH_URBAN'` which holds values of True for areas with high urbanization where over 80% of the state population lives in urban areas (`'POPPCT_URBAN'` > 80%) and False for areas of low urbanization where under or approximately 80% of the state population lives in urban areas (`'POPPCT_URBAN'` <= 80%). The second is `'is_MAJOR_OUTAGE'` which hold values of True for major outages which is defined as one lasting over 60 minutes and affecting over 50,000 customers (`'OUTAGE.DURATION'` > 60 and `'CUSTOMERS.AFFECTED'` > 50,000) and False otherwise (`'OUTAGE.DURATION'` <= 60 and `'CUSTOMERS.AFFECTED'` <= 50,000).
 
 Below is the first few rows of the cleaned dataframe. The cleaned dataframe has 1534 rows and 20 columns.
+
 |   YEAR | MONTH   | U.S._STATE   | NERC.REGION   | CLIMATE.REGION     |   ANOMALY.LEVEL | CLIMATE.CATEGORY   | CAUSE.CATEGORY     |   OUTAGE.DURATION |   DEMAND.LOSS.MW |   CUSTOMERS.AFFECTED |   TOTAL.PRICE |   TOTAL.SALES |   TOTAL.CUSTOMERS |   POPPCT_URBAN |   AREAPCT_URBAN | OUTAGE.START.DATETIME   | OUTAGE.RESTORATION.DATETIME   | is_HIGH_URBAN   | is_MAJOR_OUTAGE   |
 |-------:|:--------|:-------------|:--------------|:-------------------|----------------:|:-------------------|:-------------------|------------------:|-----------------:|---------------------:|--------------:|--------------:|------------------:|---------------:|----------------:|:------------------------|:------------------------------|:----------------|:------------------|
 |   2011 | July    | Minnesota    | MRO           | East North Central |            -0.3 | normal             | severe weather     |              3060 |              nan |                70000 |          9.28 |   6.56252e+06 |       2.5957e+06  |          73.27 |            2.14 | 2011-07-01 17:00:00     | 2011-07-03 20:00:00           | False           | True              |
@@ -115,6 +116,7 @@ I found that there are more customers affected in the Northeast, West, South, an
 
 #### Aggragate Analysis
 I first found the average outage duration and number of customers affected for each cause category.
+
 | CAUSE.CATEGORY                |   OUTAGE.DURATION |   CUSTOMERS.AFFECTED |
 |:------------------------------|------------------:|---------------------:|
 | equipment failure             |          1816.91  |        101936        |
@@ -128,6 +130,7 @@ I first found the average outage duration and number of customers affected for e
 This chart provides interesting information about what outage cause categories tend to have high or low duration and number of customers affected. For example, fuel supply emergencies tend to have long outage durations with few customers affected. On the other hand, outages caused by equipment failure, severe weather, and system operability disruption all affect a large number of customers, but have relatively short outage durations compared to outages caused by fuel supply emergencies.
 
 I also found the number of power outages that are major and not major, as decided by the column `'is_MAJOR_OUTAGE'`, for each cause category.
+
 | CAUSE.CATEGORY                |   not_major |   is_major |
 |:------------------------------|------------:|-----------:|
 | equipment failure             |          18 |         12 |
@@ -139,6 +142,60 @@ I also found the number of power outages that are major and not major, as decide
 | system operability disruption |          40 |         43 |
 
 This pivot table shows which cause categories tend to lead to major or non-major outages. Equipment failure and system operability disruption tend to lead equally to major and non-major outages. Fuel supply emergencies, intentional attacks, islanding, and public appeal lead to non-major outages. However, severe weather often leads to major outages.
+
+## Assessment of Missingness
+### NMAR Analysis
+One column that may be Not Missing At Random (NMAR) is `'OUTAGE.DURATION'`. Extremely short outages lasting only a few seconds may be reported as missing. Therefore, values that should be reported as 0 minutes may all be missing from the data. 
+
+Certain sensors may not have low enough thresholds for recording duration of an outage while others are able to record outages lasting only a few seconds. Therefore, an additional column of minimum duration detectable can make `'OUTAGE.DURATION'` Missing At Random (MAR) dependent on minimum duration detectable. Higher minimum duration detectable values would correspond to missing outage durations as those sensors would not be able to detect short outages.
+
+### Missingness Dependency
+To understand the missingness in one of my key columns for analysis, `'CUSTOMERS.AFFECTED'`, I will test if the missingness in this column is dependent on the columns `'CLIMATE.CATEGORY'` and `'TOTAL.CUSTOMERS'`. For both permutation tests, I will use a significance level of 0.05
+#### Climate Category
+I will use a test statistic of total variation distance (TVD) to compare the categorical distribution of `'CLIMATE.CATEGORY'` when `'CUSTOMERS.AFFECTED'` is missing and when it is not missing.
+
+**Null Hypothesis:** The distribution of `'CLIMATE.CATEGORY'` is the same when `'CUSTOMERS.AFFECTED'` is missing and when it is not missing. (The missingness in `'CUSTOMERS.AFFECTED'` is not dependent on `'CLIMATE.CATEGORY'`)
+
+**Alternate Hypothesis:** The distribution of `'CLIMATE.CATEGORY'` is different when `'CUSTOMERS.AFFECTED'` is missing and when it is not missing. (The missingness in `'CUSTOMERS.AFFECTED'` is dependent on `'CLIMATE.CATEGORY'`)
+
+<iframe
+  src="assets/miss_by_climate_cat.html"
+  width="800"
+  height="600"
+  frameborder="0"
+></iframe>
+
+After performing a permutation test with 10,000 trials, I found an  **observed statistic** of about 0.0353 with a **p-value** of 0.3679. Because the p-value is > 0.05, I fail to reject the null hypothesis. There is not convincing evidence of a significant difference in the distribution of `'CLIMATE.CATEGORY'` when `'CUSTOMERS.AFFECTED'` is missing and not missing. This indicates that the missingness in `'CUSTOMERS.AFFECTED'` is not dependent on `'CLIMATE.CATEGORY'`.
+
+<iframe
+  src="assets/miss_emp_by_climate_cat.html"
+  width="800"
+  height="600"
+  frameborder="0"
+></iframe>
+
+#### Total Customers
+I will use a the Kolmogorov-Smirnov (K-S) test statistic to compare the numerical distribution of `'TOTAL.CUSTOMERS'` when `'CUSTOMERS.AFFECTED'` is missing and when it is not missing. I chose this test statistic as the numerical distributions have different shapes.
+
+**Null Hypothesis:** The distribution of `'TOTAL.CUSTOMERS'` is the same when `'CUSTOMERS.AFFECTED'` is missing and when it is not missing. (The missingness in `'CUSTOMERS.AFFECTED'` is not dependent on `'TOTAL.CUSTOMERS'`)
+
+**Alternate Hypothesis:** The distribution of `'TOTAL.CUSTOMERS'` is different when `'CUSTOMERS.AFFECTED'` is missing and when it is not missing. (The missingness in `'CUSTOMERS.AFFECTED'` is dependent on `'TOTAL.CUSTOMERS'`)
+
+<iframe
+  src="assets/miss_by_total_cust.html"
+  width="800"
+  height="600"
+  frameborder="0"
+></iframe>
+
+After performing a permutation test with 10,000 trials, I found an **observed statistic** of about 0.1976 with a **p-value** of approximately 0.0. Becasue the p-value < 0.05, I reject the null hypothesis. There is convincing evidence of a significant difference in the distribution of `'TOTAL.CUSTOMERS'` when `'CUSTOMERS.AFFECTED'` is missing and not missing. This indicates that the missingness in `'CUSTOMERS.AFFECTED'` is dependent on `'TOTAL.CUSTOMERS'`.
+
+<iframe
+  src="assets/miss_emp_by_total_cust.html"
+  width="800"
+  height="600"
+  frameborder="0"
+></iframe>
 
 ## Hypothesis Testing
 
