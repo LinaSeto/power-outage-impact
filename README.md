@@ -165,7 +165,7 @@ I will use a test statistic of total variation distance (TVD) to compare the cat
   frameborder="0"
 ></iframe>
 
-After performing a permutation test with 10,000 trials, I found an  **observed statistic** of about 0.0353 with a **p-value** of 0.3679. Because the p-value is > 0.05, I fail to reject the null hypothesis. There is not convincing evidence of a significant difference in the distribution of `'CLIMATE.CATEGORY'` when `'CUSTOMERS.AFFECTED'` is missing and not missing. This indicates that the missingness in `'CUSTOMERS.AFFECTED'` is not dependent on `'CLIMATE.CATEGORY'`.
+After performing a permutation test with 10,000 simulations, I found an  **observed statistic** of about 0.0353 with a **p-value** of 0.3679. Because the p-value is > 0.05, I fail to reject the null hypothesis. There is not convincing evidence of a significant difference in the distribution of `'CLIMATE.CATEGORY'` when `'CUSTOMERS.AFFECTED'` is missing and not missing. This indicates that the missingness in `'CUSTOMERS.AFFECTED'` is not dependent on `'CLIMATE.CATEGORY'`.
 
 <iframe
   src="assets/miss_emp_by_climate_cat.html"
@@ -188,7 +188,7 @@ I will use a the Kolmogorov-Smirnov (K-S) test statistic to compare the numerica
   frameborder="0"
 ></iframe>
 
-After performing a permutation test with 10,000 trials, I found an **observed statistic** of about 0.1976 with a **p-value** of approximately 0.0. Becasue the p-value < 0.05, I reject the null hypothesis. There is convincing evidence of a significant difference in the distribution of `'TOTAL.CUSTOMERS'` when `'CUSTOMERS.AFFECTED'` is missing and not missing. This indicates that the missingness in `'CUSTOMERS.AFFECTED'` is dependent on `'TOTAL.CUSTOMERS'`.
+After performing a permutation test with 10,000 simulations, I found an **observed statistic** of about 0.1976 with a **p-value** of approximately 0.0. Becasue the p-value < 0.05, I reject the null hypothesis. There is convincing evidence of a significant difference in the distribution of `'TOTAL.CUSTOMERS'` when `'CUSTOMERS.AFFECTED'` is missing and not missing. This indicates that the missingness in `'CUSTOMERS.AFFECTED'` is dependent on `'TOTAL.CUSTOMERS'`.
 
 <iframe
   src="assets/miss_emp_by_total_cust.html"
@@ -198,6 +198,33 @@ After performing a permutation test with 10,000 trials, I found an **observed st
 ></iframe>
 
 ## Hypothesis Testing
+The main focus of this project is on the factors that may impact the number of customers affected by power outages. One such factor that I will investigate through a permutation test is urbanization level. Using the column `'is_HIGH_URBAN'`, I will compare the average number of customers affected in areas with high urbanization and low urbanization levels. This analysis will provide insight into whether the level of urbanization plays a role or impacts the number of customers affected in a power outage. With the national trend towards urban areas, I want to know if the average number of customers affected is greater in areas with high urbanization.
+
+**Null Hypothesis:** The mean number of customers affected by power outages is the same for high and low urbanization levels 
+
+**Alternate Hypothesis:** The mean number of customers affected by power outages is greater for high than for low urbanization levels
+
+**Test Statistic:** Difference in mean number of customers affected in high urbanization and low urbanization areas (high_urban_mean - low_urban_mean)
+
+**Significance Level:** 0.05
+
+I chose a permutation test in order to test whether the two samples of high urbanization levels and low urbanization levels were from the same population. I set the alternate hypothesis as high urbanization levels having more customers affected as there is a current move towards cities and increasing population in urban areas. If there are more customers affected on average in states with high urbanization areas, there should be greater concern and precautionary measures taken to ensure the safety of these customers in the event of a power outage. By looking at the difference in mean number of customers in these two urbanization levels, I can see which level has a greater mean and come to a more effective conclusion. 
+
+<iframe
+  src="assets/perm_urban.html"
+  width="800"
+  height="600"
+  frameborder="0"
+></iframe>
+
+After performing a permutation test with 10,000 simulations, I found an **observed statistic** of about 45705.2383 with a **p-value** of about 0.0026. Because the p-value < 0.05, I reject the null hypothesis. There is convincing evidence that the mean number of customers affected by power outages is significantly higher for high than for low urbanization levels. This implies that areas with high urbanization tend to affect a greater number of customers on average, causing a greater need for precautions in place in high urban areas to lessen impact of power outages.
+
+<iframe
+  src="assets/perm_emp.html"
+  width="800"
+  height="600"
+  frameborder="0"
+></iframe>
 
 ## Framing a Prediction Problem
 
