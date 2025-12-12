@@ -227,6 +227,25 @@ After performing a permutation test with 10,000 simulations, I found an **observ
 ></iframe>
 
 ## Framing a Prediction Problem
+I will predict whether a power outage is major or not major by the thresholds of the `'is_MAJOR_OUTAGE'` column in a binary classification problem. Focusing back in on my central question of what factors impact the number of customers affected by an outage, I will use this prediction problem to investigate how to best predict if an outage is major, which relies heavily on how many customers are affected. Knowing if an outage will be major can help officials prepare resources and send out warnings in the case of a major outage to limit damage and avoid dangerous situations where possible.
+
+While the classes are not heavily imbalanced, I will use the F1-score as my metric of evaluating the model in order to balance precision and recall. A false negative in this context would mean that the outage was predicted not to be major, but was. This would lead to unprepared customers and may prolong the outage without proper resources to repair the outage. A false positive would mean that the outage was predicted to be major, but was not. This would lead to a waste of resources and may be costly for both individuals and local governments. While false negatives are more dangerous, I want to protect against both false negatives and false positives to minimize cost and danger. However, I will also use accuracy to ensure that the model is not overfitting.
+
+| is_MAJOR_OUTAGE   |   proportion |
+|:------------------|-------------:|
+| False             |     0.561278 |
+| True              |     0.438722 |
+
+
+In order to build a model, I must first handle the missing values in my data and filter out irrelevant and redundant columns or columns unavailable at prediction time.
+
+First, I will filter out columns that are not useful in prediction. I will remove `'OUTAGE.DURATION'` and `'CUSTOMERS.AFFECTED'` as they are used to decide the response variable, `'is_MAJOR_OUTAGE'`. I will remove `'OUTAGE.START.DATETIME'`, `'OUTAGE.RESTORATION.DATETIME'`, and `'DEMAND.LOSS.MW'` as they are not available before an outage occurs. While `'CAUSE.CATEGORY'` can only be determined after an outage occurs, I categorized it as relevant as an element of the `'CAUSE.CATEGORY'` may be predicted or expected to occur, such as severe weather or islanding, before an outage occurs. I will remove `'CLIMATE.CATEGORY'` as it is redundant with `'ANOMALY.LEVEL'` and provides less information. The three features that capture geographical location are `'U.S._STATE'`, `'CLIMATE.REGION'`, and `'NERC.REGION'`. I used `'CLIMATE.REGION'` and dropped the other two as they are slightly redundant and the other two columns were extremely sparse after being one hot encoded. The resulting relevant columns are `'YEAR'`, `'MONTH'`, `'CLIMATE.REGION'`, `'ANOMALY.LEVEL'`, `'CAUSE.CATEGORY'`, `'TOTAL.PRICE'`, `'TOTAL.SALES'`, `'TOTAL.CUSTOMERS'`, `'POPPCT_URBAN'`, `'AREAPCT_URBAN'`.
+
+Next, I will handle missing data in the remaining features. The columns with missing data are `'MONTH'`, `'ANOMALY.LEVEL'`, `'TOTAL.PRICE'`, and `'TOTAL.SALES'`. `'MONTH'` and `'ANOMALY.LEVEL'` are always missing together and `'TOTAL.PRICE'` and `'TOTAL.SALES'` are always missing together. I performed likewise deletion on `'MONTH'` and `'ANOMALY.LEVEL'` as there is no way to find reasonable values for these two columns and there are only 9 missing values. Mean imputation or probabilistic imputation would likely not provide reasonable estimates for values in these two columns. I then performed mean imputation conditional on `'U.S._STATE'` for `'TOTAL.PRICE'` and `'TOTAL.SALES'`. These two features were reported to be taken based on the US state, so conditional mean imputation gives reasonable estimates for missing values in these columns. The final dataset includes 1525 rows and 11 columns including the response variable.
+
+To prepare the data, I will split the data using a train-test split with 75% training data and 25% test data. 
+
+## Baseline Model
 
 ## Final Model
 
