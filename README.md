@@ -246,6 +246,10 @@ Next, I will handle missing data in the remaining features. The columns with mis
 To prepare the data, I will split the data using a train-test split with 75% training data and 25% test data. 
 
 ## Baseline Model
+For my baseline model, I used a Decision Tree Classifier to predict whether a power outage is major. I used three features: `'CLIMATE.REGION'` (nominal), `'CAUSE.CATEGORY'` (nominal), and `'POPPCT_URBAN'` (quantitative). Two are nominal and one is quantitative. I one hot encoded the two nominal categorical variables `'CLIMATE.REGION'` and `'CAUSE.CATEGORY'` and simply passed `'POPPCT_URBAN'` through. 
+
+Using the default hyperparameters for the Decision Tree Classifier, I trained the model and tested the accuracy of the training and test data. The training accuracy was about 0.8880 and the test accuracy was about 0.8717. This means the model accurately predicted about 87.17% of unseen data, generalizing relatively well. Because these values are not very different, the model did not overfit. However, there seems to be room to improve. This can also be seen in the **F1-score** of the test data, which was about **0.8693**. The metrics indicate that the model did relatively well, but also show room for improvement.
+
 
 ## Final Model
 
