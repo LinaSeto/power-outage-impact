@@ -252,5 +252,38 @@ Using the default hyperparameters for the Decision Tree Classifier, I trained th
 
 
 ## Final Model
+For my final model, I used the features: `'YEAR'` (ordinal), `'MONTH'`(ordinal), `'CLIMATE.REGION'`(nominal), `'ANOMALY.LEVEL'`(quantitative), `'CAUSE.CATEGORY'`(nominal), `'TOTAL.PRICE'`(quantitative), `'TOTAL.SALES'`(quantitative), `'TOTAL.CUSTOMERS'`(quantitative), `'POPPCT_URBAN'`(quantitative), and `'AREAPCT_URBAN'`(quantitative).
+
+The following are the reasoning behind choosing each feature:
+- `'YEAR'`:  The year can capture more long term changes in climate or other trends.
+- `'MONTH'`: The month shows seasonal changes or likelihood for certain weather events such as hurricane seasons, winter storms, or heatwaves.
+- `'CLIMATE.REGION'`: Different climate regions may be more prone to certain weather events.
+- `'ANOMALY.LEVEL'`: Anomaly level can help in identifying abnormal climate conditions that make certain weather events more likely.
+- `'CAUSE.CATEGORY'`: As seen in the aggregate analysis, some cause categories correspond to major or non-major outages.
+- `'TOTAL.PRICE'`: Monthly electricity prices can show a state’s investment in energy infrastructure and maintenance. 
+- `'TOTAL.SALES'`: Total electricity consumption indicates energy consumption rates and stress on electricity grids.
+- `'TOTAL.CUSTOMERS'`: Annual customers in a state reveal how widespread an outage can be and how many customers rely on energy from a certain source.
+- `'POPPCT_URBAN'`: Urban population percentage can indicate the scope of the outage and how dense urban areas are.
+- `'AREAPCT_URBAN'`: Urban land percentage can reveal sparse land usage with weak electricity grids or dense urban grids.
+
+I used a Random Forest Classifier and chose the best hyperparameters using Grid Search CV with 5-fold cross-validation. I one hot encoded the categorical variables: `'MONTH'`, `'CLIMATE.REGION'`, `'CAUSE.CATEGORY'`. I also performed a log-transformation on  `'AREAPCT_URBAN'` and `'TOTAL.SALES'` as both of their distributions were extremely skewed. I passed the remaining columns through.
+
+I tuned the hyperparameters criterion, max_depth, and min_samples_split through the Grid Search CV. I tested the criterion of ‘gini’ and ‘entropy’; max_depth of None, 2, 4, 6, 8, 10, 12, 15, and 20; and min_samples_split of 2, 5, 10, 20, 50, 60, and 70. 
+The hyperparameters that performed the best were:
+- criterion: ‘gini’
+- max_depth: 10
+- min_samples_split: 2
+
+After training the final model, I found a training accuracy of about 0.9493 and a test accuracy of about 0.8953. While the difference between the training and test accuracy is larger, the test accuracy did improve with the model accurately predicting about 89.53% of unseen data. The **F1-score** of **0.8919** also showed improvement from the baseline model.  
+
+<iframe
+  src="assets/conf_matrix.html"
+  width="800"
+  height="600"
+  frameborder="0"
+></iframe>
+
+From this confusion matrix, we can see that the precision score is about 0.8871 and the recall score is about 0.8967. The precision and recall are both high and balanced effectively as seen in the matrix and F1-score, which achieves the main goal to minimize both cost and danger.
+
 
 ## Fairness Analysis
