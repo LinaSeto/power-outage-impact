@@ -239,9 +239,9 @@ While the classes are not heavily imbalanced, I will use the F1-score as my metr
 
 In order to build a model, I must first handle the missing values in my data and filter out irrelevant and redundant columns or columns unavailable at prediction time.
 
-First, I will filter out columns that are not useful in prediction. I will remove `'OUTAGE.DURATION'` and `'CUSTOMERS.AFFECTED'` as they are used to decide the response variable, `'is_MAJOR_OUTAGE'`. I will remove `'OUTAGE.START.DATETIME'`, `'OUTAGE.RESTORATION.DATETIME'`, and `'DEMAND.LOSS.MW'` as they are not available before an outage occurs. While `'CAUSE.CATEGORY'` can only be determined after an outage occurs, I categorized it as relevant as an element of the `'CAUSE.CATEGORY'` may be predicted or expected to occur, such as severe weather or islanding, before an outage occurs. I will remove `'CLIMATE.CATEGORY'` as it is redundant with `'ANOMALY.LEVEL'` and provides less information. The three features that capture geographical location are `'U.S._STATE'`, `'CLIMATE.REGION'`, and `'NERC.REGION'`. I used `'CLIMATE.REGION'` and dropped the other two as they are slightly redundant and the other two columns were extremely sparse after being one hot encoded. The resulting relevant columns are `'YEAR'`, `'MONTH'`, `'CLIMATE.REGION'`, `'ANOMALY.LEVEL'`, `'CAUSE.CATEGORY'`, `'TOTAL.PRICE'`, `'TOTAL.SALES'`, `'TOTAL.CUSTOMERS'`, `'POPPCT_URBAN'`, `'AREAPCT_URBAN'`.
+First, I will filter out columns that are not useful in prediction. I will remove `'OUTAGE.DURATION'` and `'CUSTOMERS.AFFECTED'` as they are used to decide the response variable, `'is_MAJOR_OUTAGE'`. I will remove `'OUTAGE.START.DATETIME'`, `'OUTAGE.RESTORATION.DATETIME'`, and `'DEMAND.LOSS.MW'` as they are not available before an outage occurs. While `'CAUSE.CATEGORY'` can only be determined after an outage occurs, I categorized it as relevant as an element of the `'CAUSE.CATEGORY'` may be predicted or expected to occur, such as severe weather or islanding, before an outage occurs. I will remove `'CLIMATE.CATEGORY'` as it is redundant with `'ANOMALY.LEVEL'` and provides less information. While `'is_HIGH_URBAN'` is derived from `'POPPCT_URBAN'`, both are kept to provide a high level split as well as preserve detail. The three features that capture geographical location are `'U.S._STATE'`, `'CLIMATE.REGION'`, and `'NERC.REGION'`. I used `'CLIMATE.REGION'` and dropped the other two as they are slightly redundant and the other two columns were extremely sparse after being one hot encoded. The resulting relevant columns are `'YEAR'`, `'MONTH'`, `'CLIMATE.REGION'`, `'ANOMALY.LEVEL'`, `'CAUSE.CATEGORY'`, `'TOTAL.PRICE'`, `'TOTAL.SALES'`, `'TOTAL.CUSTOMERS'`, `'POPPCT_URBAN'`, `'AREAPCT_URBAN'`, `'is_HIGH_URBAN'`.
 
-Next, I will handle missing data in the remaining features. The columns with missing data are `'MONTH'`, `'ANOMALY.LEVEL'`, `'TOTAL.PRICE'`, and `'TOTAL.SALES'`. `'MONTH'` and `'ANOMALY.LEVEL'` are always missing together and `'TOTAL.PRICE'` and `'TOTAL.SALES'` are always missing together. I performed likewise deletion on `'MONTH'` and `'ANOMALY.LEVEL'` as there is no way to find reasonable values for these two columns and there are only 9 missing values. Mean imputation or probabilistic imputation would likely not provide reasonable estimates for values in these two columns. I then performed mean imputation conditional on `'U.S._STATE'` for `'TOTAL.PRICE'` and `'TOTAL.SALES'`. These two features were reported to be taken based on the US state, so conditional mean imputation gives reasonable estimates for missing values in these columns. The final dataset includes 1525 rows and 11 columns including the response variable.
+Next, I will handle missing data in the remaining features. The columns with missing data are `'MONTH'`, `'ANOMALY.LEVEL'`, `'TOTAL.PRICE'`, and `'TOTAL.SALES'`. `'MONTH'` and `'ANOMALY.LEVEL'` are always missing together and `'TOTAL.PRICE'` and `'TOTAL.SALES'` are always missing together. I performed likewise deletion on `'MONTH'` and `'ANOMALY.LEVEL'` as there is no way to find reasonable values for these two columns and there are only 9 missing values. Mean imputation or probabilistic imputation would likely not provide reasonable estimates for values in these two columns. I then performed mean imputation conditional on `'U.S._STATE'` for `'TOTAL.PRICE'` and `'TOTAL.SALES'`. These two features were reported to be taken based on the US state, so conditional mean imputation gives reasonable estimates for missing values in these columns. The final dataset includes 1525 rows and 12 columns including the response variable.
 
 To prepare the data, I will split the data using a train-test split with 75% training data and 25% test data. 
 
@@ -252,7 +252,7 @@ Using the default hyperparameters for the Decision Tree Classifier, I trained th
 
 
 ## Final Model
-For my final model, I used the features: `'YEAR'` (ordinal), `'MONTH'`(ordinal), `'CLIMATE.REGION'`(nominal), `'ANOMALY.LEVEL'`(quantitative), `'CAUSE.CATEGORY'`(nominal), `'TOTAL.PRICE'`(quantitative), `'TOTAL.SALES'`(quantitative), `'TOTAL.CUSTOMERS'`(quantitative), `'POPPCT_URBAN'`(quantitative), and `'AREAPCT_URBAN'`(quantitative).
+For my final model, I used the features: `'YEAR'` (ordinal), `'MONTH'`(ordinal), `'CLIMATE.REGION'`(nominal), `'ANOMALY.LEVEL'`(quantitative), `'CAUSE.CATEGORY'`(nominal), `'TOTAL.PRICE'`(quantitative), `'TOTAL.SALES'`(quantitative), `'TOTAL.CUSTOMERS'`(quantitative), `'POPPCT_URBAN'`(quantitative), `'AREAPCT_URBAN'`(quantitative), and `'is_HIGH_URBAN'` (nominal).
 
 The following are the reasoning behind choosing each feature:
 - `'YEAR'`:  The year can capture more long term changes in climate or other trends.
@@ -265,6 +265,7 @@ The following are the reasoning behind choosing each feature:
 - `'TOTAL.CUSTOMERS'`: Annual customers in a state reveal how widespread an outage can be and how many customers rely on energy from a certain source.
 - `'POPPCT_URBAN'`: Urban population percentage can indicate the scope of the outage and how dense urban areas are.
 - `'AREAPCT_URBAN'`: Urban land percentage can reveal sparse land usage with weak electricity grids or dense urban grids.
+- `'is_HIGH_URBAN'`: this threshold can differentiate between areas of dense and more sparse electricity grids
 
 I used a Random Forest Classifier and chose the best hyperparameters using Grid Search CV with 5-fold cross-validation. I one hot encoded the categorical variables: `'MONTH'`, `'CLIMATE.REGION'`, `'CAUSE.CATEGORY'`. I also performed a log-transformation on  `'AREAPCT_URBAN'` and `'TOTAL.SALES'` as both of their distributions were extremely skewed. I passed the remaining columns through.
 
@@ -283,7 +284,26 @@ After training the final model, I found a training accuracy of about 0.9493 and 
   frameborder="0"
 ></iframe>
 
-From this confusion matrix, we can see that the precision score is about 0.8871 and the recall score is about 0.8967. The precision and recall are both high and balanced effectively as seen in the matrix and F1-score, which achieves the main goal to minimize both cost and danger.
+From this confusion matrix, the precision score is about 0.8871 and the recall score is about 0.8967. The precision and recall are both high and balanced effectively as seen in the matrix and F1-score, which achieves the main goal to minimize both cost and danger.
 
 
 ## Fairness Analysis
+To assess the fairness of my model, I performed a permutation test to compare the F1-score for high and low urbanization areas using `'is_HIGH_URBAN'`. Comparing model performance in areas of high and low urbanization levels is of concern as this model may not be as reliable for a certain urbanization level. With the trend towards urbanization and population growth in cities, it would be especially concerning if the model performs significantly worse for areas of high urbanization.
+
+**Null Hypothesis:** The F1-score of the final models is the same for high and low urbanization levels. (The model is fair)
+
+**Alternate Hypothesis:** The F1-score of the final models is lower for high urbanization than for low urbanization levels. (The model is not fair)
+
+**Test Statistic:** Difference in F1-score in high and low urbanization areas (high_urban_f1 - low_urban_f1)
+
+**Significance Level:** 0.05
+
+<iframe
+  src="assets/fairness_emp.html"
+  width="800"
+  height="600"
+  frameborder="0"
+></iframe>
+
+After performing a permutation test with 10,000 simulations, I found an **observed statistic** of about -0.0976 with a **p-value** of about 0.0019. Because the p-value < 0.05, we reject the null hypothesis. There is convincing evidence that the F1-score of the final model is lower for high urbanization than for low urbanization levels. This implies that the model is not fair and that it performs worse for areas of high urbanization. This is a cause for concern in applying this model.
+
